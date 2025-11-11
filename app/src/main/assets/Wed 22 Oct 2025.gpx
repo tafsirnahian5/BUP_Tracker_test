@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<gpx version="1.1" creator="OsmAndRouterV2" xmlns="http://www.topografix.com/GPX/1/1" xmlns:osmand="https://osmand.net/docs/technical/osmand-file-formats/osmand-gpx" xmlns:gpxtpx="https://www8.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 https://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Wed 22 Oct 2025</name>
+  </metadata>
+  <trk>
+    <name>Wed 22 Oct 2025</name>
+    <trkseg>
+      <trkpt lat="23.8402813" lon="90.3575249" />
+      <trkpt lat="23.8403213" lon="90.3581354" />
+      <trkpt lat="23.8390117" lon="90.358374" />
+      <trkpt lat="23.8382372" lon="90.3584811" />
+      <trkpt lat="23.837835" lon="90.3585295" />
+      <trkpt lat="23.8373498" lon="90.3585894" />
+      <trkpt lat="23.8367612" lon="90.3586687" />
+      <trkpt lat="23.8361992" lon="90.3587399" />
+      <trkpt lat="23.8356366" lon="90.358807" />
+      <trkpt lat="23.8351698" lon="90.3588625" />
+      <trkpt lat="23.8348944" lon="90.3588993" />
+      <trkpt lat="23.8348094" lon="90.3589176" />
+      <trkpt lat="23.8347355" lon="90.3589503" />
+      <trkpt lat="23.834655" lon="90.359005" />
+      <trkpt lat="23.8345655" lon="90.3590732" />
+      <trkpt lat="23.8342335" lon="90.3593605" />
+      <trkpt lat="23.8336749" lon="90.3598943" />
+      <trkpt lat="23.8332197" lon="90.3603087" />
+      <trkpt lat="23.8329308" lon="90.3605782" />
+      <trkpt lat="23.8327142" lon="90.3607766" />
+      <trkpt lat="23.8325874" lon="90.3609082" />
+      <trkpt lat="23.8323578" lon="90.3611345" />
+      <trkpt lat="23.8322045" lon="90.3612899" />
+      <trkpt lat="23.8320227" lon="90.3614729" />
+      <trkpt lat="23.8319639" lon="90.3615326" />
+      <trkpt lat="23.8319143" lon="90.3617039" />
+      <trkpt lat="23.8319235" lon="90.3620625" />
+      <trkpt lat="23.8319502" lon="90.362667" />
+      <trkpt lat="23.8319663" lon="90.363068" />
+      <trkpt lat="23.8319769" lon="90.3633666" />
+      <trkpt lat="23.8319846" lon="90.36362" />
+      <trkpt lat="23.8319818" lon="90.3638294" />
+      <trkpt lat="23.8295599" lon="90.3639194" />
+      <trkpt lat="23.829315" lon="90.3639694" />
+      <trkpt lat="23.8289991" lon="90.3640795" />
+      <trkpt lat="23.8285442" lon="90.3641632" />
+      <trkpt lat="23.8283384" lon="90.3642259" />
+      <trkpt lat="23.8282543" lon="90.3642369" />
+      <trkpt lat="23.8280521" lon="90.3641848" />
+      <trkpt lat="23.8278186" lon="90.3642452" />
+      <trkpt lat="23.8275521" lon="90.3642933" />
+      <trkpt lat="23.82704" lon="90.3643434" />
+      <trkpt lat="23.8267448" lon="90.3643501" />
+      <trkpt lat="23.8263615" lon="90.3643535" />
+      <trkpt lat="23.8261089" lon="90.3643467" />
+      <trkpt lat="23.8252728" lon="90.3643556" />
+      <trkpt lat="23.8249103" lon="90.3643709" />
+    </trkseg>
+  </trk>
+</gpx>
