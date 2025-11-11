@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<gpx version="1.1" creator="OsmAndRouterV2" xmlns="http://www.topografix.com/GPX/1/1" xmlns:osmand="https://osmand.net/docs/technical/osmand-file-formats/osmand-gpx" xmlns:gpxtpx="https://www8.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 https://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Thu 06 Nov 2025</name>
+  </metadata>
+  <trk>
+    <name>Thu 06 Nov 2025</name>
+    <trkseg>
+      <trkpt lat="23.8070145" lon="90.3682812" />
+      <trkpt lat="23.8148377" lon="90.3660719" />
+      <trkpt lat="23.8184776" lon="90.3653199" />
+    </trkseg>
+  </trk>
+</gpx>
