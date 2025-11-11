@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // --------------------------------------------------------------
-        // Map initialisation
+        // Map initialization
         // --------------------------------------------------------------
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { mbMap ->
