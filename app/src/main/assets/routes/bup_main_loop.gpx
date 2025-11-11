@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="BUP Tracker" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>BUP Main Loop</name>
+  </metadata>
+  <trk>
+    <name>BUP Main Loop</name>
+    <trkseg>
+      <trkpt lat="23.840200" lon="90.356500">
+        <time>2024-01-01T00:00:00Z</time>
+      </trkpt>
+      <trkpt lat="23.840800" lon="90.358900">
+        <time>2024-01-01T00:01:00Z</time>
+      </trkpt>
+      <trkpt lat="23.839100" lon="90.359600">
+        <time>2024-01-01T00:02:00Z</time>
+      </trkpt>
+      <trkpt lat="23.837900" lon="90.357100">
+        <time>2024-01-01T00:03:00Z</time>
+      </trkpt>
+      <trkpt lat="23.840200" lon="90.356500">
+        <time>2024-01-01T00:04:00Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
