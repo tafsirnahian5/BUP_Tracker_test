@@ -1,3 +1,32 @@
 <resources>
     <string name="app_name">BUP BUS Tracker(DEMO)</string>
+    <string name="label_pick_mbtiles">Pick MBTiles</string>
+    <string name="label_lock_zoom">Lock Zoom</string>
+    <string name="label_debug">Debug</string>
+    <string name="label_zoom_in">Zoom in</string>
+    <string name="label_zoom_out">Zoom out</string>
+    <string name="label_start_tracking">Start Tracking</string>
+    <string name="label_stop_tracking">Stop Tracking</string>
+    <string name="label_save_gpx">Save GPX</string>
+    <string name="label_show_current_location">Show current location</string>
+    <string name="label_open_settings">Settings</string>
+    <string name="welcome_message">Welcome, this is a tracking app for BUP Bus!</string>
+    <string name="action_get_started">Get Started</string>
+    <string name="permission_explanation">We use your location to show the bus position and record GPX tracks.</string>
+    <string name="speedometer_unavailable">Speed: -- km/h</string>
+    <string name="speedometer_value">Speed: %.1f km/h</string>
+    <string name="poi_settings_title">Points of interest layers</string>
+    <string name="poi_layer_level_3">Level 3 points of interest</string>
+    <string name="poi_layer_level_2">Level 2 points of interest</string>
+    <string name="poi_layer_level_1">Level 1 points of interest</string>
+    <string name="poi_layer_other">Other points of interest</string>
+    <string name="poi_layer_railway">Railway features</string>
+    <string name="poi_layer_transit">Transit features</string>
+    <string name="poi_layer_label">POI labels</string>
+    <string name="poi_layer_hamlet">Hamlet names</string>
+    <string name="poi_layer_village">Village names</string>
+    <string name="poi_layer_town">Town names</string>
+    <string name="poi_layer_city">City names</string>
+    <string name="poi_layer_city_capital">Capital city names</string>
+    <string name="poi_layer_place_other">Other place names</string>
 </resources>

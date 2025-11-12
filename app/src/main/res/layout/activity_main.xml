@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <!-- Control Panel (Top Bar) -->
     <LinearLayout
         android:id="@+id/controlPanel"
         android:layout_width="0dp"
@@ -21,12 +20,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Pick MBTiles Button -->
         <Button
             android:id="@+id/pickFileButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Pick MBTiles" />
+            android:text="@string/label_pick_mbtiles" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -42,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:checked="false"
-                android:text="Lock Zoom" />
+                android:text="@string/label_lock_zoom" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/debugModeSwitch"
@@ -50,12 +48,18 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:checked="false"
-                android:text="Debug" />
+                android:text="@string/label_debug" />
         </LinearLayout>
+
+        <Button
+            android:id="@+id/settingsButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/label_open_settings" />
 
     </LinearLayout>
 
-    <!-- Map View -->
     <com.mapbox.mapboxsdk.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="0dp"
@@ -81,7 +85,7 @@
             android:id="@+id/zoomInButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:contentDescription="Zoom in"
+            android:contentDescription="@string/label_zoom_in"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_input_add" />
 
@@ -95,9 +99,62 @@
             android:id="@+id/zoomOutButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:contentDescription="Zoom out"
+            android:contentDescription="@string/label_zoom_out"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_input_delete" />
     </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/trackingControls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_margin="16dp"
+        android:background="@drawable/overlay_background"
+        android:elevation="8dp"
+        android:padding="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <TextView
+            android:id="@+id/speedometerText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@android:color/black"
+            android:text="@string/speedometer_unavailable" />
+
+        <Button
+            android:id="@+id/startTrackingButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/label_start_tracking" />
+
+        <Button
+            android:id="@+id/stopTrackingButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/label_stop_tracking" />
+
+        <Button
+            android:id="@+id/saveTrackButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/label_save_gpx" />
+
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/currentLocationButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/label_show_current_location"
+        app:srcCompat="@drawable/ic_location_plus"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/zoomButtons" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
