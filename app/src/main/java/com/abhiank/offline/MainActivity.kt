@@ -9,7 +9,6 @@ import android.content.pm.PackageManager
 import android.graphics.RectF
 import android.location.Location
 import android.os.Bundle
-import android.os.Looper
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageButton
@@ -21,11 +20,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.mapbox.android.core.location.LocationEngine
-import com.mapbox.android.core.location.LocationEngineCallback
-import com.mapbox.android.core.location.LocationEngineProvider
-import com.mapbox.android.core.location.LocationEngineRequest
-import com.mapbox.android.core.location.LocationEngineResult
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
@@ -42,7 +42,6 @@ import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.textField
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.visibility
 import java.io.IOException
-import java.lang.ref.WeakReference
 import java.util.Locale
 
 class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
@@ -75,8 +74,17 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private var currentLocation: Location? = null
     private var lastRecordedTrackLocation: Location? = null
 
-    private lateinit var locationEngine: LocationEngine
-    private val locationCallback = MainLocationCallback(this)
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val locationRequest: LocationRequest = LocationRequest.Builder(LOCATION_INTERVAL_MS)
+        .setMinUpdateIntervalMillis(LOCATION_FASTEST_INTERVAL_MS)
+        .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+        .build()
+    private val fusedLocationCallback = object : LocationCallback() {
+        override fun onLocationResult(result: LocationResult) {
+            val location = result.lastLocation ?: return
+            handleLocationUpdate(location)
+        }
+    }
 
     private val defaultRouteAssets = listOf(
         "routes/bup_main_loop.gpx",
@@ -112,6 +120,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         preferences = PreferenceManager.getDefaultSharedPreferences(this)
         preferences.registerOnSharedPreferenceChangeListener(this)
         gpxRecorder = GpxRecorder(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         configurePermissions()
         configureMap(savedInstanceState)
@@ -472,22 +481,18 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         if (!hasLocationPermission()) return
-        if (!::locationEngine.isInitialized) {
-            locationEngine = LocationEngineProvider.getBestLocationEngine(this)
-        } else {
-            locationEngine.removeLocationUpdates(locationCallback)
+        if (!::fusedLocationClient.isInitialized) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         }
-        val request = LocationEngineRequest.Builder(LOCATION_INTERVAL_MS)
-            .setPriority(LocationEngineRequest.PRIORITY_HIGH_ACCURACY)
-            .setFastestInterval(LOCATION_FASTEST_INTERVAL_MS)
-            .build()
-        locationEngine.requestLocationUpdates(request, locationCallback, Looper.getMainLooper())
-        locationEngine.getLastLocation(locationCallback)
+        fusedLocationClient.requestLocationUpdates(locationRequest, fusedLocationCallback, mainLooper)
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            location?.let { handleLocationUpdate(it) }
+        }
     }
 
     private fun stopLocationUpdates() {
-        if (::locationEngine.isInitialized) {
-            locationEngine.removeLocationUpdates(locationCallback)
+        if (::fusedLocationClient.isInitialized) {
+            fusedLocationClient.removeLocationUpdates(fusedLocationCallback)
         }
     }
 
@@ -527,30 +532,19 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-    private class MainLocationCallback(activity: MainActivity) :
-        LocationEngineCallback<LocationEngineResult> {
-
-        private val activityRef = WeakReference(activity)
-
-        override fun onSuccess(result: LocationEngineResult?) {
-            val activity = activityRef.get() ?: return
-            val location = result?.lastLocation ?: return
-            activity.runOnUiThread {
-                activity.currentLocation = location
-                activity.updateSpeedometer(location)
-                if (activity.isTracking) {
-                    val previous = activity.lastRecordedTrackLocation
-                    if (previous == null || previous.distanceTo(location) >= 1f) {
-                        activity.gpxRecorder.addPoint(location)
-                        activity.lastRecordedTrackLocation = location
-                        activity.updateTrackingButtons()
-                    }
-                }
-            }
+    private fun handleLocationUpdate(location: Location) {
+        currentLocation = location
+        updateSpeedometer(location)
+        if (locationComponentActivated) {
+            map.locationComponent.forceLocationUpdate(location)
         }
-
-        override fun onFailure(exception: Exception) {
-            Log.e("Location", "Location update failed", exception)
+        if (isTracking) {
+            val previous = lastRecordedTrackLocation
+            if (previous == null || previous.distanceTo(location) >= 1f) {
+                gpxRecorder.addPoint(location)
+                lastRecordedTrackLocation = location
+                updateTrackingButtons()
+            }
         }
     }
 }
