@@ -1,52 +1,57 @@
 package com.abhiank.offline
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.RectF
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
+import com.mapbox.mapboxsdk.location.modes.CameraMode
+import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
+import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.textField
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory.visibility
+import java.io.IOException
 import java.util.Locale
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
 
     companion object {
         private const val MBTILES_NAME = "dhaka2.mbtiles"
         private const val PERMISSION_REQUEST_CODE = 100
         private const val ROUTE_TOUCH_BUFFER = 24f
-        private val LANDMARK_LAYER_IDS = arrayOf(
-            "poi-level-3",
-            "poi-level-2",
-            "poi-level-1",
-            "poi-other",
-            "poi-railway",
-            "poi-transit",
-            "poi-label",
-            "place-hamlet",
-            "place-village",
-            "place-town",
-            "place-city",
-            "place-city-capital",
-            "place-other"
-        )
+        private const val LOCATION_INTERVAL_MS = 1000L
+        private const val LOCATION_FASTEST_INTERVAL_MS = 500L
     }
 
     private lateinit var mapView: MapView
@@ -55,7 +60,31 @@ class MainActivity : AppCompatActivity() {
     private lateinit var debugSwitch: SwitchCompat
     private lateinit var mbtilesLoader: MbtilesStyleLoader
     private lateinit var gpxRenderer: GpxRouteRenderer
+    private lateinit var gpxRecorder: GpxRecorder
+    private lateinit var startTrackingButton: Button
+    private lateinit var stopTrackingButton: Button
+    private lateinit var saveTrackButton: Button
+    private lateinit var currentLocationButton: FloatingActionButton
+    private lateinit var speedometerTextView: TextView
+    private lateinit var preferences: SharedPreferences
     private var infoMarker: Marker? = null
+
+    private var isTracking = false
+    private var locationComponentActivated = false
+    private var currentLocation: Location? = null
+    private var lastRecordedTrackLocation: Location? = null
+
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val locationRequest: LocationRequest = LocationRequest.Builder(LOCATION_INTERVAL_MS)
+        .setMinUpdateIntervalMillis(LOCATION_FASTEST_INTERVAL_MS)
+        .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+        .build()
+    private val fusedLocationCallback = object : LocationCallback() {
+        override fun onLocationResult(result: LocationResult) {
+            val location = result.lastLocation ?: return
+            handleLocationUpdate(location)
+        }
+    }
 
     private val defaultRouteAssets = listOf(
         "routes/bup_main_loop.gpx",
@@ -83,10 +112,20 @@ class MainActivity : AppCompatActivity() {
         mapView = findViewById(R.id.mapView)
         zoomSwitch = findViewById(R.id.lockZoomSwitch)
         debugSwitch = findViewById(R.id.debugModeSwitch)
+        startTrackingButton = findViewById(R.id.startTrackingButton)
+        stopTrackingButton = findViewById(R.id.stopTrackingButton)
+        saveTrackButton = findViewById(R.id.saveTrackButton)
+        currentLocationButton = findViewById(R.id.currentLocationButton)
+        speedometerTextView = findViewById(R.id.speedometerText)
+        preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        preferences.registerOnSharedPreferenceChangeListener(this)
+        gpxRecorder = GpxRecorder(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         configurePermissions()
         configureMap(savedInstanceState)
         configureButtons()
+        updateSpeedometer(null)
     }
 
     private fun configurePermissions() {
@@ -125,7 +164,10 @@ class MainActivity : AppCompatActivity() {
             gpxRenderer = GpxRouteRenderer(this, map)
 
             map.addOnStyleLoadedListener {
+                locationComponentActivated = false
                 gpxRenderer.loadFromAssets(defaultRouteAssets)
+                setupLocationComponentIfPermitted()
+                applyPoiLayerVisibility()
             }
             mbtilesLoader.loadFromAssets(MBTILES_NAME)
             map.addOnMapClickListener { handleMapClick(it) }
@@ -150,6 +192,10 @@ class MainActivity : AppCompatActivity() {
             filePickerReturnResult.launch(intent)
         }
 
+        findViewById<Button>(R.id.settingsButton).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
         findViewById<ImageButton>(R.id.zoomInButton).setOnClickListener {
             if (::map.isInitialized) {
                 map.animateCamera(CameraUpdateFactory.zoomIn())
@@ -161,6 +207,13 @@ class MainActivity : AppCompatActivity() {
                 map.animateCamera(CameraUpdateFactory.zoomOut())
             }
         }
+
+        startTrackingButton.setOnClickListener { startTracking() }
+        stopTrackingButton.setOnClickListener { stopTracking() }
+        saveTrackButton.setOnClickListener { saveCurrentTrack() }
+        currentLocationButton.setOnClickListener { focusOnCurrentLocation() }
+
+        updateTrackingButtons()
     }
 
     private fun configureSwitches() {
@@ -248,7 +301,7 @@ class MainActivity : AppCompatActivity() {
             return true
         }
 
-        val landmarkFeatures = map.queryRenderedFeatures(touchRect, *LANDMARK_LAYER_IDS)
+        val landmarkFeatures = map.queryRenderedFeatures(touchRect, *PoiLayerPreferences.layerIds)
         val landmarkFeature = landmarkFeatures.firstOrNull { it.geometry() is Point }
         if (landmarkFeature != null) {
             val geometryPoint = landmarkFeature.geometry() as? Point
@@ -300,11 +353,15 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         mapView.onStart()
+        if (locationComponentActivated) {
+            startLocationUpdates()
+        }
     }
 
     override fun onResume() {
         super.onResume()
         mapView.onResume()
+        setupLocationComponentIfPermitted()
     }
 
     override fun onPause() {
@@ -314,6 +371,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         mapView.onStop()
+        stopLocationUpdates()
         super.onStop()
     }
 
@@ -323,12 +381,170 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        stopLocationUpdates()
         mapView.onDestroy()
+        preferences.unregisterOnSharedPreferenceChangeListener(this)
         super.onDestroy()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         mapView.onSaveInstanceState(outState)
+    }
+
+    private fun startTracking() {
+        if (!hasLocationPermission()) {
+            toast(getString(R.string.permission_explanation))
+            return
+        }
+        if (!locationComponentActivated) {
+            setupLocationComponentIfPermitted()
+        }
+        if (!locationComponentActivated) {
+            toast("Location unavailable")
+            return
+        }
+        isTracking = true
+        gpxRecorder.startNewTrack()
+        currentLocation?.let {
+            gpxRecorder.addPoint(it)
+            lastRecordedTrackLocation = it
+        } ?: run {
+            lastRecordedTrackLocation = null
+        }
+        toast("Live tracking started")
+        updateTrackingButtons()
+    }
+
+    private fun stopTracking() {
+        if (!isTracking) return
+        isTracking = false
+        toast("Live tracking stopped")
+        updateTrackingButtons()
+    }
+
+    private fun saveCurrentTrack() {
+        if (isTracking) {
+            toast("Stop tracking before saving")
+            return
+        }
+        if (!gpxRecorder.hasRecordedTrack()) {
+            toast("No track data to save yet")
+            return
+        }
+        try {
+            val file = gpxRecorder.saveToFile()
+            gpxRecorder.clear()
+            lastRecordedTrackLocation = null
+            val message = file?.let { "Saved GPX to ${it.name}" } ?: "Unable to save GPX"
+            toast(message)
+        } catch (io: IOException) {
+            Log.e("GPX", "Error saving GPX", io)
+            toast("Failed to save GPX file")
+        }
+        updateTrackingButtons()
+    }
+
+    private fun focusOnCurrentLocation() {
+        if (!::map.isInitialized) return
+        val location = currentLocation
+        if (location != null) {
+            val target = LatLng(location.latitude, location.longitude)
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(target, 16.0))
+        } else {
+            toast("Waiting for current location")
+        }
+    }
+
+    private fun updateTrackingButtons() {
+        startTrackingButton.isEnabled = !isTracking
+        stopTrackingButton.isEnabled = isTracking
+        saveTrackButton.isEnabled = !isTracking && gpxRecorder.hasRecordedTrack()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun setupLocationComponentIfPermitted() {
+        if (!::map.isInitialized) return
+        if (!hasLocationPermission()) return
+        if (locationComponentActivated) return
+        val style = map.style ?: return
+        val activationOptions = LocationComponentActivationOptions.builder(this, style).build()
+        val locationComponent = map.locationComponent
+        locationComponent.activateLocationComponent(activationOptions)
+        locationComponent.isLocationComponentEnabled = true
+        locationComponent.cameraMode = CameraMode.NONE
+        locationComponent.renderMode = RenderMode.COMPASS
+        locationComponentActivated = true
+        startLocationUpdates()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startLocationUpdates() {
+        if (!hasLocationPermission()) return
+        if (!::fusedLocationClient.isInitialized) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        }
+        fusedLocationClient.requestLocationUpdates(locationRequest, fusedLocationCallback, mainLooper)
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            location?.let { handleLocationUpdate(it) }
+        }
+    }
+
+    private fun stopLocationUpdates() {
+        if (::fusedLocationClient.isInitialized) {
+            fusedLocationClient.removeLocationUpdates(fusedLocationCallback)
+        }
+    }
+
+    private fun applyPoiLayerVisibility() {
+        if (!::map.isInitialized) return
+        val style = map.style ?: return
+        PoiLayerPreferences.layers.forEach { layer ->
+            val layerVisibility = if (PoiLayerPreferences.isLayerEnabled(preferences, layer.id)) {
+                Property.VISIBLE
+            } else {
+                Property.NONE
+            }
+            style.getLayer(layer.id)?.setProperties(visibility(layerVisibility))
+        }
+    }
+
+    private fun updateSpeedometer(location: Location?) {
+        val displayText = if (location != null && location.hasSpeed()) {
+            val speedKmh = location.speed * 3.6f
+            getString(R.string.speedometer_value, speedKmh.toDouble())
+        } else {
+            getString(R.string.speedometer_unavailable)
+        }
+        speedometerTextView.text = displayText
+    }
+
+    private fun hasLocationPermission(): Boolean =
+        ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
+        if (key == null) return
+        if (key.startsWith(PoiLayerPreferences.preferencePrefix())) {
+            applyPoiLayerVisibility()
+        }
+    }
+
+    private fun handleLocationUpdate(location: Location) {
+        currentLocation = location
+        updateSpeedometer(location)
+        if (locationComponentActivated) {
+            map.locationComponent.forceLocationUpdate(location)
+        }
+        if (isTracking) {
+            val previous = lastRecordedTrackLocation
+            if (previous == null || previous.distanceTo(location) >= 1f) {
+                gpxRecorder.addPoint(location)
+                lastRecordedTrackLocation = location
+                updateTrackingButtons()
+            }
+        }
     }
 }
