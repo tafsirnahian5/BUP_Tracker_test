@@ -58,9 +58,16 @@
             android:layout_marginTop="8dp"
             android:text="@string/label_open_settings" />
 
+        <Button
+            android:id="@+id/historyButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/label_open_history" />
+
     </LinearLayout>
 
-    <com.mapbox.mapboxsdk.maps.MapView
+    <org.maplibre.android.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -155,6 +162,16 @@
         android:contentDescription="@string/label_show_current_location"
         app:srcCompat="@drawable/ic_location_plus"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/zoomButtons" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/addPoiButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/label_add_custom_poi"
+        app:srcCompat="@drawable/ic_add_poi"
+        app:layout_constraintBottom_toTopOf="@id/currentLocationButton"
         app:layout_constraintEnd_toStartOf="@id/zoomButtons" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

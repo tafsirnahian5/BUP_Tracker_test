@@ -11,6 +11,11 @@ import java.util.TimeZone
 
 class GpxRecorder(private val context: Context) {
 
+    companion object {
+        fun tracksDirectory(context: Context): File =
+            File(context.filesDir, "tracks")
+    }
+
     private val trackPoints = mutableListOf<TrackPoint>()
     private val timeFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
         timeZone = TimeZone.getTimeZone("UTC")
@@ -42,7 +47,7 @@ class GpxRecorder(private val context: Context) {
         if (trackPoints.isEmpty()) {
             return null
         }
-        val directory = File(context.getExternalFilesDir(null), "tracks")
+        val directory = tracksDirectory(context)
         if (!directory.exists() && !directory.mkdirs()) {
             throw IOException("Unable to create directory: ${'$'}directory")
         }
