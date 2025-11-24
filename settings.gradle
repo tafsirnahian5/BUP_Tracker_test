@@ -1,2 +1,33 @@
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
+pluginManagement {
+    repositories {
+        maven { url 'https://dl.google.com/dl/android/maven2/' }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+    plugins {
+        id 'com.android.application' version '8.5.2'
+        id 'org.jetbrains.kotlin.android' version '1.9.24'
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'com.android.application') {
+                useModule("com.android.tools.build:gradle:${requested.version}")
+            } else if (requested.id.id == 'org.jetbrains.kotlin.android') {
+                useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:${requested.version}")
+            }
+        }
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        maven { url 'https://dl.google.com/dl/android/maven2/' }
+        mavenCentral()
+    }
+}
+
 rootProject.name = "OfflineMapExample"
-include ':app'
+include(":app")

@@ -5,17 +5,17 @@ import android.database.sqlite.SQLiteDatabase
 import android.graphics.Color
 import android.net.Uri
 import androidx.appcompat.widget.SwitchCompat
-import com.mapbox.android.gestures.StandardScaleGestureDetector
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
-import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.geometry.LatLngBounds
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.maps.Style
+import org.maplibre.android.gestures.StandardScaleGestureDetector
+import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.geometry.LatLngBounds
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.Style
 import java.io.File
 
 class MbtilesStyleLoader(
     private val context: Context,
-    private val map: MapboxMap,
+    private val map: MapLibreMap,
     private val zoomSwitch: SwitchCompat,
     private val debugSwitch: SwitchCompat
 ) {
@@ -57,7 +57,7 @@ class MbtilesStyleLoader(
 
         map.animateCamera(
             CameraUpdateFactory.newLatLngZoom(DEFAULT_CENTER, 15.0),
-            object : MapboxMap.CancelableCallback {
+            object : MapLibreMap.CancelableCallback {
                 override fun onCancel() {}
 
                 override fun onFinish() {
@@ -71,7 +71,7 @@ class MbtilesStyleLoader(
                         map.limitViewToBounds(bounds)
                     }
 
-                    map.addOnScaleListener(object : MapboxMap.OnScaleListener {
+                    map.addOnScaleListener(object : MapLibreMap.OnScaleListener {
                         override fun onScaleBegin(detector: StandardScaleGestureDetector) {}
 
                         override fun onScale(detector: StandardScaleGestureDetector) {

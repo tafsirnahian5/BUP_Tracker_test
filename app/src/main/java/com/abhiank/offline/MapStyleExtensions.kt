@@ -3,14 +3,14 @@ package com.abhiank.offline
 import android.graphics.Color
 import com.mapbox.geojson.Point
 import com.mapbox.geojson.Polygon
-import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.geometry.LatLngBounds
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.style.layers.FillLayer
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory.fillColor
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory.fillOpacity
-import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
-import com.mapbox.mapboxsdk.maps.Style
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.geometry.LatLngBounds
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.Style
+import org.maplibre.android.style.layers.FillLayer
+import org.maplibre.android.style.layers.PropertyFactory.fillColor
+import org.maplibre.android.style.layers.PropertyFactory.fillOpacity
+import org.maplibre.android.style.sources.GeoJsonSource
 
 fun showBoundsArea(
     loadedMapStyle: Style,
@@ -40,7 +40,7 @@ fun showBoundsArea(
     )
 }
 
-fun MapboxMap.limitViewToBounds(bounds: LatLngBounds) {
+fun MapLibreMap.limitViewToBounds(bounds: LatLngBounds) {
     val visible = projection.visibleRegion.latLngBounds
     val newHeight = bounds.latitudeSpan - visible.latitudeSpan
     val newWidth = bounds.longitudeSpan - visible.longitudeSpan
