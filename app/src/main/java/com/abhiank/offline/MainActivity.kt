@@ -21,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.preference.PreferenceManager
@@ -67,6 +68,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private lateinit var mapView: MapView
     private lateinit var map: MapLibreMap
+    // UI controls
     private lateinit var zoomSwitch: SwitchCompat
     private lateinit var debugSwitch: SwitchCompat
     private lateinit var mbtilesLoader: MbtilesStyleLoader
@@ -82,12 +84,14 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private lateinit var customPoiRepository: CustomPoiRepository
     private var infoMarker: Marker? = null
 
+    // Tracking state
     private var isTracking = false
     private var hasGpsLock = false
     private var locationComponentActivated = false
     private var currentLocation: Location? = null
     private var lastRecordedTrackLocation: Location? = null
 
+    // Location plumbing
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var locationRequest: LocationRequest? = null
     private var isRequestingLocationUpdates = false
@@ -116,6 +120,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
         }
 
+    // region Lifecycle
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         MapLibre.getInstance(this, getString(R.string.maplibre_access_token))
@@ -142,6 +147,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         updateSpeedometer(null)
     }
 
+    // region Permissions & requests
     private fun configurePermissions(requestBackground: Boolean = false) {
         PermissionHelper.maybeShowPermissionEducation(this) {
             when {
@@ -154,6 +160,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
+    // region Map configuration
     private fun configureMap(savedInstanceState: Bundle?) {
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { mapLibreMap ->
@@ -238,41 +245,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         updateTrackingButtons()
     }
+    // endregion
 
-    private fun buildLocationRequest(): LocationRequest {
-        val powerSaveEnabled = TrackingPreferences.isPowerSaveEnabled(preferences)
-        val gpsAccuracy = TrackingPreferences.getGpsAccuracy(preferences)
-        val interval = TrackingPreferences.locationIntervalMillis(powerSaveEnabled)
-        val fastestInterval = TrackingPreferences.locationFastestIntervalMillis(powerSaveEnabled)
-        return LocationRequest.Builder(interval)
-            .setMinUpdateIntervalMillis(fastestInterval)
-            .setPriority(gpsAccuracy.priority)
-            .build()
-    }
-
-    private fun updateLocationRequest() {
-        locationRequest = buildLocationRequest()
-        if (isRequestingLocationUpdates) {
-            restartLocationUpdates()
-        }
-        hasGpsLock = currentLocation?.let { isLocationAccurateForLock(it) } ?: false
-        updateTrackingButtons()
-        updateSpeedometer(currentLocation)
-    }
-
-    private fun restartLocationUpdates() {
-        stopLocationUpdates(clearTrackingState = false)
-        if (locationComponentActivated) {
-            startLocationUpdates()
-        }
-    }
-
-    private fun gpsLockThresholdMeters(): Float =
-        TrackingPreferences.getGpsAccuracy(preferences).lockThresholdMeters
-
-    private fun isLocationAccurateForLock(location: Location): Boolean =
-        location.hasAccuracy() && location.accuracy <= gpsLockThresholdMeters()
-
+    // region Map interactions
     private fun configureSwitches() {
         zoomSwitch.isChecked = false
         zoomSwitch.isEnabled = false
@@ -407,6 +382,43 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             null
         }
 
+    // endregion
+
+    // region Location + tracking
+    private fun buildLocationRequest(): LocationRequest {
+        val powerSaveEnabled = TrackingPreferences.isPowerSaveEnabled(preferences)
+        val gpsAccuracy = TrackingPreferences.getGpsAccuracy(preferences)
+        val interval = TrackingPreferences.locationIntervalMillis(powerSaveEnabled)
+        val fastestInterval = TrackingPreferences.locationFastestIntervalMillis(powerSaveEnabled)
+        return LocationRequest.Builder(interval)
+            .setMinUpdateIntervalMillis(fastestInterval)
+            .setPriority(gpsAccuracy.priority)
+            .build()
+    }
+
+    private fun updateLocationRequest() {
+        locationRequest = buildLocationRequest()
+        if (isRequestingLocationUpdates) {
+            restartLocationUpdates()
+        }
+        hasGpsLock = currentLocation?.let { isLocationAccurateForLock(it) } ?: false
+        updateTrackingButtons()
+        updateSpeedometer(currentLocation)
+    }
+
+    private fun restartLocationUpdates() {
+        stopLocationUpdates(clearTrackingState = false)
+        if (locationComponentActivated) {
+            startLocationUpdates()
+        }
+    }
+
+    private fun gpsLockThresholdMeters(): Float =
+        TrackingPreferences.getGpsAccuracy(preferences).lockThresholdMeters
+
+    private fun isLocationAccurateForLock(location: Location): Boolean =
+        location.hasAccuracy() && location.accuracy <= gpsLockThresholdMeters()
+
     override fun onStart() {
         super.onStart()
         mapView.onStart()
@@ -455,6 +467,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         super.onSaveInstanceState(outState)
         mapView.onSaveInstanceState(outState)
     }
+
+    // endregion
 
     private fun startTracking() {
         configurePermissions(requestBackground = true)
@@ -748,4 +762,5 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             updateTrackingButtons()
         }
     }
+    // endregion
 }
